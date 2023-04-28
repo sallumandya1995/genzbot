@@ -1,0 +1,14 @@
+whisper
+transformers
+torch
+stability_sdk
+Pillow
+pytube == 12.1.0
+google-search-results
+openai
+langchain
+PyPDF2
+faiss-cpu
+python-docx
+tiktoken
+openpyxl
