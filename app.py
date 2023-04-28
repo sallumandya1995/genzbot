@@ -83,13 +83,19 @@ def gen_draw(user_query:str)->tuple:
     return "Invalid prompt"
 
 
-
 def vid_tube(user_query:str) -> tuple:
   py_tube_list_of_videos = Search(user_query)
   first_video = py_tube_list_of_videos.results[0]
-  youtube_object = first_video.streams.get_highest_resolution() #if facing problems use get_lowest_resolution
-  file_path = youtube_object.download('/tmp/')
-  return (file_path,)
+  yt_flag = False
+  for vid in py_tube_list_of_videos.results:
+    print(vid.vid_info.keys())
+    if vid.vid_info.get('streamingData'):
+      print(vid.vid_info.keys(),'-')
+      yt_flag = True
+      file_path = vid.streams.get_highest_resolution().download('/tmp/')
+      break
+  
+  return (file_path,) if yt_flag else "The system cannot fulfill your request currently please try later"
 
 
 def search_internet(user_query:str,*,key_number:int) -> str:
@@ -332,7 +338,7 @@ def upload_file(chatbot_history,file_uploaded):
         return  chatbot_history + [(None, f'Kindly attempt again at a subsequent time.')]
   
   
-  return chatbot_history + [(None, f'You have uploaded {os.path.split(file_uploaded.name)[-1]} successfully. You can start asking questions about the document.')]
+  return chatbot_history + [(None, f'You have uploaded {os.path.split(file_uploaded.name)[-1]} successfully. You can start asking questions about the document.If you want to stop asking questions about the uploaded document click on "clear chat history".')]
 
 
 def clear_chat_history(history:list)->list:
@@ -368,7 +374,7 @@ def clear_chat_history(history:list)->list:
 with gr.Blocks(theme='freddyaboulton/test-blue') as demo:
    
   gr.Markdown("""<h1 style="color:skyblue;font-family:'Brush Script MT', cursive;text-align:center">GenZBot</h1>""")
-  gr.Markdown("""GenZBot is a virtual assistant that employs advanced artificial intelligence (AI) technologies to enhance its capabilities. Utilizing cutting-edge AI techniques such as Whisper, chatgpt, internet, Dall-E and OpenAI, GenZBot can provide users with a wide range of useful features. By leveraging AI, GenZBot can understand and respond to users' requests in a natural and intuitive manner, allowing for a more seamless and personalized experience. Its ability to generate paintings, drawings, and abstract art, as well as play music and videos, is made possible by sophisticated AI algorithms that can produce complex and nuanced results. Overall, GenZBot's extensive use of AI technology enables it to serve as a powerful and versatile digital assistant that can adapt to the needs of its users.""")
+  gr.Markdown("""GenZBot is a virtual assistant that employs advanced artificial intelligence (AI) technologies to enhance its capabilities. Utilizing cutting-edge AI techniques such as Whisper, chatgpt, internet, Dall-E and OpenAI and Langchain, GenZBot can provide users with a wide range of useful features. By leveraging AI, GenZBot can understand and respond to users' requests in a natural and intuitive manner, allowing for a more seamless and personalized experience. Its ability to generate paintings, drawings, and abstract art, play music and videos, and you can Upload your documents and ask questions about the document, is made possible by sophisticated AI algorithms that can produce complex and nuanced results. Overall, GenZBot's extensive use of AI technology enables it to serve as a powerful and versatile digital assistant that can adapt to the needs of its users.""")
   chatbot = gr.Chatbot()
   
   with gr.Row():
@@ -379,6 +385,7 @@ with gr.Blocks(theme='freddyaboulton/test-blue') as demo:
       user_audio_microphone_submit_button = gr.Button("Get me result")
     with gr.Column(scale=0.15, min_width=0):
       upload_button = gr.UploadButton("📁", info="Upload text files and start talking to them")
+      gr.Markdown("Upload document by clicking on the directory icon.")  
   clear_button = gr.Button("Clear chat history")
     
 
