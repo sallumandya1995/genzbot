@@ -10,3 +10,5 @@ GenZBot is a virtual assistant that employs advanced artificial intelligence (AI
 <img width="926" alt="1" src="https://user-images.githubusercontent.com/127108567/235142477-e216b854-9ea1-46cd-8866-731fe82605a8.png">
 
 <img width="914" alt="stable_diff_demo" src="https://user-images.githubusercontent.com/127108567/235142532-ab4d1a3e-c109-4dfc-95f2-0b5ce526da8a.png">
+
+<img width="824" alt="image" src="https://github.com/sallumandya1995/genzbot/assets/127108567/333606a3-81d3-42e5-b8b1-78f29ab8df13">
