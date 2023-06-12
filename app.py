@@ -26,6 +26,8 @@ from langchain.llms import OpenAI
 from langchain.agents import create_pandas_dataframe_agent
 import pandas as pd
 import docx
+from pandasai import PandasAI
+from pandasai.llm.openai import OpenAI as pai_openai
 
 
 
@@ -42,6 +44,7 @@ stability_api = client.StabilityInference(
 whisper_from_pipeline = pipeline("automatic-speech-recognition",model="openai/whisper-medium")
 EMBEDIDNGS = None
 DATAFRAME_FILE = None
+DATAFRAME = None
 DOCSEARCH = None
 RANDOM_USER = ''.join(chr(random.randint(65,90)) for i in range(8))+f'{random.randint(1,10000000000)}'
 print(f'{RANDOM_USER} chat started')
@@ -84,16 +87,18 @@ def gen_draw(user_query:str)->tuple:
 
 
 def vid_tube(user_query:str) -> tuple:
-  py_tube_list_of_videos = Search(user_query)
-  first_video = py_tube_list_of_videos.results[0]
-  yt_flag = False
-  for vid in py_tube_list_of_videos.results:
-    print(vid.vid_info.keys())
-    if vid.vid_info.get('streamingData'):
-      print(vid.vid_info.keys(),'-')
-      yt_flag = True
-      file_path = vid.streams.get_highest_resolution().download('/tmp/')
-      break
+    
+  video_id = Search(user_query).results[0].video_id
+  return f'<iframe width="560" height="315" src="https://www.youtube.com/embed/{video_id}" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>' 
+  # first_video = py_tube_list_of_videos.results[0]
+  # yt_flag = False
+  # for vid in py_tube_list_of_videos.results:
+  #   print(vid.vid_info.keys())
+  #   if vid.vid_info.get('streamingData'):
+  #     print(vid.vid_info.keys(),'-')
+  #     yt_flag = True
+  #     file_path = vid.streams.get_highest_resolution().download('/tmp/')
+  #     break
   
   return (file_path,) if yt_flag else "The system cannot fulfill your request currently please try later"
 
@@ -121,7 +126,7 @@ def search_internet(user_query:str,*,key_number:int) -> str:
     snippets = ""
     counter = 1
     for item in organic_results:
-      snippets += str(counter) + ". " + item.get("snippet", "") + '\n' + item['about_this_result']['source']['source_info_link'] + '\n'
+      snippets += str(counter) + ". " + item.get("snippet", "") + '\n' + item['link'] + '\n'
       counter += 1
     
         # snippets
@@ -154,7 +159,7 @@ def search_document_uploaded(user_query:str) -> str:
 
 
 def ask_dataframes(user_query):
-  return DATAFRAME_FILE.run(user_query)
+  return DATAFRAME_FILE.run(DATAFRAME, prompt = user_query)
 
 ############# GET OPENAI RESPONSE
 def get_open_ai_reponse(user_query:str)->Union[tuple,str]:
@@ -305,18 +310,14 @@ def ask_questions_abt_dataframes(file,file_ext):
   print(file_ext)
   global EMBEDIDNGS
   EMBEDIDNGS = None
-  global DOCSEARCH
-  DOCSEARCH = None
-
-  
 
   reader_function = { '.csv': pd.read_csv, '.xlsx': pd.read_excel }.get(file_ext)
   print(reader_function.__name__)
   global DATAFRAME_FILE
-  DATAFRAME_FILE = create_pandas_dataframe_agent(
-    OpenAI(openai_api_key=os.environ['OPENAI_API_KEY']),
-    reader_function(file.name)
-  )
+  global DATAFRAME
+  DATAFRAME = reader_function(file.name)
+  llm = pai_openai(api_token=os.environ['OPENAI_API_KEY'])
+  DATAFRAME_FILE = PandasAI(llm)
 
 
 
@@ -372,7 +373,7 @@ def clear_chat_history(history:list)->list:
 
 #################### DRIVER SCRIPT #####################
 with gr.Blocks(theme='freddyaboulton/test-blue') as demo:
-   
+  gr.Markdown(gr.__version__) 
   gr.Markdown("""<h1 style="color:skyblue;font-family:'Brush Script MT', cursive;text-align:center">GenZBot</h1>""")
   gr.Markdown("""GenZBot is a virtual assistant that employs advanced artificial intelligence (AI) technologies to enhance its capabilities. Utilizing cutting-edge AI techniques such as Whisper, chatgpt, internet, Dall-E and OpenAI and Langchain, GenZBot can provide users with a wide range of useful features. By leveraging AI, GenZBot can understand and respond to users' requests in a natural and intuitive manner, allowing for a more seamless and personalized experience. Its ability to generate paintings, drawings, and abstract art, play music and videos, and you can Upload your documents and ask questions about the document, is made possible by sophisticated AI algorithms that can produce complex and nuanced results. Overall, GenZBot's extensive use of AI technology enables it to serve as a powerful and versatile digital assistant that can adapt to the needs of its users.""")
   chatbot = gr.Chatbot()
